@@ -1,0 +1,67 @@
+diff --git a/node_modules/next-auth/providers/email.d.ts b/node_modules/next-auth/providers/email.d.ts
+index 50a4eb1..e9ec29c 100644
+--- a/node_modules/next-auth/providers/email.d.ts
++++ b/node_modules/next-auth/providers/email.d.ts
+@@ -6,6 +6,7 @@ export interface EmailConfig extends CommonProviderOptions {
+     server: string | SMTPConnectionOptions;
+     /** @default "NextAuth <no-reply@example.com>" */
+     from?: string;
++    whitelist?: string[];
+     /**
+      * How long until the e-mail can be used to log the user in,
+      * in seconds. Defaults to 1 day
+diff --git a/node_modules/next-auth/providers/email.js b/node_modules/next-auth/providers/email.js
+index 11695a2..01a43f2 100644
+--- a/node_modules/next-auth/providers/email.js
++++ b/node_modules/next-auth/providers/email.js
+@@ -21,6 +21,7 @@ function Email(options) {
+       }
+     },
+     from: "NextAuth <no-reply@example.com>",
++    whitelist: [],
+     maxAge: 24 * 60 * 60,
+ 
+     async sendVerificationRequest({
+@@ -28,7 +29,8 @@ function Email(options) {
+       url,
+       provider: {
+         server,
+-        from
++        from,
++        whitelist
+       }
+     }) {
+       const {
+@@ -36,9 +38,9 @@ function Email(options) {
+       } = new URL(url);
+       const transport = (0, _nodemailer.createTransport)(server);
+       await transport.sendMail({
+-        to: email,
++        to: await checkEmail(email, whitelist),
+         from,
+-        subject: `Sign in to ${host}`,
++        subject: `Inicia sesion en ${host}`,
+         text: text({
+           url,
+           host
+@@ -106,5 +108,18 @@ function text({
+   url,
+   host
+ }) {
+-  return `Sign in to ${host}\n${url}\n\n`;
++  return `Inicia sesion en ${host}\n${url}\n\n`;
++}
++
++//? Email whitelist
++function checkEmail(email, whitelist){
++  // const checkArray= [
++  //     "alejomorell@gmail.com", "ejemploX@gmail.com"
++  // ]
++
++  if(whitelist.includes(email)){
++      return email
++  }
++
++  return ""
+ }
+\ No newline at end of file
